@@ -43,38 +43,23 @@ dpad_btn_left = 8
 while 1:
     ack, pad = ur.call('gamepad')
     if ack=="gamepadack":
+        # left_x, left_y are the left joystick values
+        # right_x, right_y are the right joystick values
         btns, dpad, left_x, left_y, right_x, right_y = pad
     else:
         btns, dpad, left_x, left_y, right_x, right_y = [0]*6
         print(ack, pad) # Debug
         
     speed = left_y/-5.12
-    turn = left_x/5.12
-    strafe = right_x/5.12
+    turn = int(right_x/5.12)
     motor_speed = int(speed)
-    power = clamp_int(-speed - turn - strafe)
+    power = clamp_int(-speed - turn)
     # print("btns %03d"%btns, "dpad %d"%dpad, "left_x %04d"%left_x, "left_y %04d"%left_y, "right_x %04d"%right_x, "right_y %04d"%right_y, 'speed ', speed, 'turn ', turn) # Debug
-    print("speed {speed:010.5f}, turn {turn:09.5f}, strafe {strafe:010.5f}, power {power}".format(speed=speed, turn=turn, strafe=strafe, power=power)) # Debug
-    if btns == btn_a:
-        # motor_pair.start(100)
-        left_wheel_motor_A.start(motor_speed)
-        right_wheel_motor_B.start(-motor_speed)
-        # motorA.run_for_rotations(0.25)
-    elif btns == btn_b:
-        left_wheel_motor_A.start(-motor_speed)
-        right_wheel_motor_B.start(motor_speed)
-        # motor_pair.start(-100)
-        # motor.run_for_rotations(-0.25)
-    elif btns == 0:
-        # motorA.stop()
-        # motorB.stop()
+    print("speed {speed:010.5f}, turn {turn:09.5f}, power {power}".format(speed=speed, turn=turn, power=power)) # Debug
+
+    # the gamepad joysticks are not always at exactly 0 so use a threshold to activate motor
+    if abs(motor_speed) > 15:
+        steering = 0 if abs(turn) < 15 else turn 
+        motor_pair.start(steering=steering, speed=-motor_speed)
+    else:
         motor_pair.stop()
-
-    # left_wheel_motor_A.start_at_power(clamp_int(-speed - turn - strafe))
-    # right_wheel_motor_B.start_at_power(clamp_int( speed - turn - strafe))
-
-    # motor.start_at_power(clamp_int(-speed - turn - strafe))
-    # for deg in range(0, 721, 90):
-    #    motor.run_to_degrees_counted(deg)
-    #    wait_for_seconds(1)
-
