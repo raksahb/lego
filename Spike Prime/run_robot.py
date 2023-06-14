@@ -3,6 +3,7 @@ from projects.mpy_robot_tools.serialtalk import SerialTalk
 from projects.mpy_robot_tools.serialtalk.mshub import MSHubSerial
 from spike import PrimeHub, Motor, MotorPair
 from spike.control import wait_for_seconds
+
 ur = SerialTalk( MSHubSerial('D'), timeout=20)
 
 # def clamp_int(n, floor=-100, ceiling=100):
@@ -19,6 +20,9 @@ motor_pair = MotorPair('B', 'A')
 
 
 hub = PrimeHub()
+
+# uncomment to to hardcode controller to specific address
+# controller_id = b'70:20:84:75:69:5F'
 
 hub.light_matrix.show_image('HAPPY')
 
@@ -37,27 +41,64 @@ dpad_btn_left = 8
 # range x = -512 (left) to 511 (right)
 # range y = -512 (up) to 511 (down)
 
-
-ack, pad = ur.call('gamepad')
-if ack=="gamepadack":
-    # left_x, left_y are the left joystick values
-    # right_x, right_y are the right joystick values
-    btns, dpad, left_x, left_y, right_x, right_y = pad
-    # btns, dpad, left_x, left_y, right_x, right_y, bt_id = pad
-    # print("asdf", ack)
-    ack, bluetooth_address = ur.call('btaddress','B',0)
-    
-    if bluetooth_address != 0:
-        print(bluetooth_address, " is connected")
+# Check whether a gamepad is connected. Returns 1 when connected
+ack, connected = ur.call('connected')
+print(ack,connected)
+if ack == "connectedack":
+    if connected == 1:
+        print("Gamepad connected")
         hub.status_light.on('blue')
-        # hub.speaker.beep(60, 0.5)
-        # wait_for_seconds(0.2)
-        # hub.speaker.beep(67, 0.5)
-        # wait_for_seconds(0.2)
-        # hub.speaker.beep(60, 0.5)
-        # hub.light_matrix.write(bluetooth_address)
-    else:
-        hub.status_light.on('red')
+        # Returns the Bluetooth address of the controller connected as index idx as a string in the format 'AA:BB:CC:11:22:33'
+        ack, bluetooth_address = ur.call('btaddress','B',0)
+        print(bluetooth_address, " is connected")
+        # # Configures the bluetooth address bluetooth_address (given as a string in the format 'AA:BB:CC:11:22:33') to be used as a filter for controllers to be connected. Depending on the btfilter setting, the filter will be active.
+        # ur.call('btallow','17s',controller_id)
+        # # Activaes the bluetooth filter. Values are 0 (not active) or 1 (active).
+        # filter_active = 1
+        # ur.call('btfilter','B',filter_active)
+        # if bluetooth_address != controller_id:
+        #     print(bluetooth_address, ", connected but expected:", controller_id)
+        #     # Disconnectes the controller connect to index idx.
+        #     ur.call('btdisconnect','B',0)
+else:
+    print("LMS-ESP32 not connected over UART")
+    hub.status_light.on('red')
+    raise SystemExit
+
+while True:
+    ack, connected = ur.call('connected')
+    print("waiting for connection")
+    if connected: 
+        hub.status_light.on('blue')
+        break
+    
+    wait_for_seconds(1)
+
+# Returns the status of the gamepad with 6 parameters:
+# myGamepad->buttons(),myGamepad->dpad(),myGamepad->axisX(),
+# myGamepad->axisY(),myGamepad->axisRX(),myGamepad->axisRY())
+print(ur.call('gamepad'))
+
+# ack, pad = ur.call('gamepad')
+# if ack=="gamepadack":
+#     # left_x, left_y are the left joystick values
+#     # right_x, right_y are the right joystick values
+#     btns, dpad, left_x, left_y, right_x, right_y = pad
+#     # btns, dpad, left_x, left_y, right_x, right_y, bt_id = pad
+#     # print("asdf", ack)
+#     ack, bluetooth_address = ur.call('btaddress','B',0)
+    
+#     if bluetooth_address != 0:
+#         print(bluetooth_address, " is connected")
+#         hub.status_light.on('blue')
+#         # hub.speaker.beep(60, 0.5)
+#         # wait_for_seconds(0.2)
+#         # hub.speaker.beep(67, 0.5)
+#         # wait_for_seconds(0.2)
+#         # hub.speaker.beep(60, 0.5)
+#         # hub.light_matrix.write(bluetooth_address)
+#     else:
+#         hub.status_light.on('red')
 
 while 1:
     ack, pad = ur.call('gamepad')
@@ -76,7 +117,8 @@ while 1:
         hub.status_light.on('red')
 
     if hub.left_button.is_pressed():
-        hub.light_matrix.write(bluetooth_address)
+        hub.light_matrix.write(bluetooth_address.decode('utf-8'))
+        hub.light_matrix.show_image('HAPPY')
 
     speed = left_y/-5.12
     turn = int(right_x/5.12)
