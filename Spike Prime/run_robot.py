@@ -41,79 +41,62 @@ dpad_btn_left = 8
 # range x = -512 (left) to 511 (right)
 # range y = -512 (up) to 511 (down)
 
+hub.light_matrix.show_image('ASLEEP')
+hub.status_light.on('orange')
+wait_for_seconds(1)
 # Check whether a gamepad is connected. Returns 1 when connected
+
 ack, connected = ur.call('connected')
 print(ack,connected)
 if ack == "connectedack":
     if connected == 1:
         print("Gamepad connected")
+        hub.light_matrix.show_image('HAPPY')
         hub.status_light.on('blue')
         # Returns the Bluetooth address of the controller connected as index idx as a string in the format 'AA:BB:CC:11:22:33'
         ack, bluetooth_address = ur.call('btaddress','B',0)
-        print(bluetooth_address, " is connected")
+        print(bluetooth_address.decode('utf-8'), " is connected")
         # # Configures the bluetooth address bluetooth_address (given as a string in the format 'AA:BB:CC:11:22:33') to be used as a filter for controllers to be connected. Depending on the btfilter setting, the filter will be active.
         # ur.call('btallow','17s',controller_id)
         # # Activaes the bluetooth filter. Values are 0 (not active) or 1 (active).
         # filter_active = 1
         # ur.call('btfilter','B',filter_active)
         # if bluetooth_address != controller_id:
-        #     print(bluetooth_address, ", connected but expected:", controller_id)
-        #     # Disconnectes the controller connect to index idx.
-        #     ur.call('btdisconnect','B',0)
+        #    print(bluetooth_address, ", connected but expected:", controller_id)
+        #    # Disconnectes the controller connect to index idx.
+        #    ur.call('btdisconnect','B',0)
 else:
     print("LMS-ESP32 not connected over UART")
     hub.status_light.on('red')
+    hub.light_matrix.show_image('SAD')
     raise SystemExit
 
 while True:
     ack, connected = ur.call('connected')
     print("waiting for connection")
-    if connected: 
+    if connected:
+        hub.light_matrix.show_image('HAPPY')
         hub.status_light.on('blue')
         break
-    
+
     wait_for_seconds(1)
 
 # Returns the status of the gamepad with 6 parameters:
 # myGamepad->buttons(),myGamepad->dpad(),myGamepad->axisX(),
 # myGamepad->axisY(),myGamepad->axisRX(),myGamepad->axisRY())
-print(ur.call('gamepad'))
+# print(ur.call('gamepad'))
 
-# ack, pad = ur.call('gamepad')
-# if ack=="gamepadack":
-#     # left_x, left_y are the left joystick values
-#     # right_x, right_y are the right joystick values
-#     btns, dpad, left_x, left_y, right_x, right_y = pad
-#     # btns, dpad, left_x, left_y, right_x, right_y, bt_id = pad
-#     # print("asdf", ack)
-#     ack, bluetooth_address = ur.call('btaddress','B',0)
-    
-#     if bluetooth_address != 0:
-#         print(bluetooth_address, " is connected")
-#         hub.status_light.on('blue')
-#         # hub.speaker.beep(60, 0.5)
-#         # wait_for_seconds(0.2)
-#         # hub.speaker.beep(67, 0.5)
-#         # wait_for_seconds(0.2)
-#         # hub.speaker.beep(60, 0.5)
-#         # hub.light_matrix.write(bluetooth_address)
-#     else:
-#         hub.status_light.on('red')
 
 while 1:
     ack, pad = ur.call('gamepad')
     if ack=="gamepadack":
-        # left_x, left_y are the left joystick values
-        # right_x, right_y are the right joystick values
         btns, dpad, left_x, left_y, right_x, right_y = pad
-        # btns, dpad, left_x, left_y, right_x, right_y, bt_id = pad
-        # print("asdf", ack)        
         ack, bluetooth_address = ur.call('btaddress','B',0)
         # print(bluetooth_address, " is connected")
 
     else:
         btns, dpad, left_x, left_y, right_x, right_y = [0]*6
-        # print(ack, pad) # Debug
+        hub.light_matrix.show_image('SAD')
         hub.status_light.on('red')
 
     if hub.left_button.is_pressed():
@@ -122,41 +105,15 @@ while 1:
 
     speed = left_y/-5.12
     turn = int(right_x/5.12)
-    # strafe = right_x/5.12
     motor_speed = int(speed)
-    # power = clamp_int(-speed - turn - strafe)
     power = clamp_int(-speed - turn)
     # print("btns %03d"%btns, "dpad %d"%dpad, "left_x %04d"%left_x, "left_y %04d"%left_y, "right_x %04d"%right_x, "right_y %04d"%right_y, 'speed ', speed, 'turn ', turn) # Debug
-    # print("speed {speed:010.5f}, turn {turn:09.5f}, strafe {strafe:010.5f}, power {power}".format(speed=speed, turn=turn, strafe=strafe, power=power)) # Debug
     # print("speed {speed:010.5f}, turn {turn:09.5f}, power {power}".format(speed=speed, turn=turn, power=power)) # Debug
-    # if btns == btn_a:
-    #    # motor_pair.start(100)
-    #    left_wheel_motor_A.start(motor_speed)
-    #    right_wheel_motor_B.start(-motor_speed)
-    #    # motorA.run_for_rotations(0.25)
-    # elif btns == btn_b:
-    #    left_wheel_motor_A.start(-motor_speed)
-    #    right_wheel_motor_B.start(motor_speed)
-    #    # motor_pair.start(-100)
-    #    # motor.run_for_rotations(-0.25)
-    # elif btns == 0:
-    #    # motorA.stop()
-    #    # motorB.stop()
-    #    motor_pair.stop()
-    # if abs(power) > 15:
-    # the gamepad joysticks are not always at exactly 0 so use a threshold to activate motor
+
     if abs(motor_speed) > 15:
-        # left_wheel_motor_A.start_at_power(power)
-        # right_wheel_motor_B.start_at_power(-power)
         steering = 0 if abs(turn) < 15 else turn
         motor_pair.start(steering=-steering, speed=-motor_speed)
-        # motor_pair.start_at_power(power)
-        # motor_pair.start_tank_at_power(power, power-5)
     else:
         motor_pair.stop()
 
-    # motor.start_at_power(power)
-    # for deg in range(0, 721, 90):
-    #    motor.run_to_degrees_counted(deg)
-    #    wait_for_seconds(1)
 
