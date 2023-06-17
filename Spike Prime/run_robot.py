@@ -46,7 +46,7 @@ hub.light_matrix.show_image('ASLEEP')
 hub.status_light.on('orange')
 wait_for_seconds(1)
 # Check whether a gamepad is connected. Returns 1 when connected
-print("1 ", "="*20)
+# print("1 ", "="*20)
 ack, connected = ur.call('connected')
 # print(ack, "response - ", "connected" if connected == 1 else "not connected")
 if ack == "connectedack":
@@ -73,7 +73,7 @@ else:
     wait_for_seconds(1)
     raise SystemExit
 
-print("2 ", "#"*20)
+# print("2 ", "#"*20)
 while True:
     ack, connected = ur.call('connected')
     if connected:
@@ -87,7 +87,7 @@ while True:
 # myGamepad->axisY(),myGamepad->axisRX(),myGamepad->axisRY())
 # print(ur.call('gamepad'))
 
-print("3 ", "%"*20)
+# print("3 ", "%"*20)
 
 while 1:
     ack, pad = ur.call('gamepad', timeout=50)
