@@ -22,7 +22,8 @@ motor_pair = MotorPair('B', 'A')
 hub = PrimeHub()
 
 # uncomment to to hardcode controller to specific address
-# controller_id = b'70:20:84:75:69:5F'
+# controller_id = b'AA:BB:CC:11:22:33'
+
 
 hub.light_matrix.show_image('HAPPY')
 
@@ -45,9 +46,9 @@ hub.light_matrix.show_image('ASLEEP')
 hub.status_light.on('orange')
 wait_for_seconds(1)
 # Check whether a gamepad is connected. Returns 1 when connected
-
+print("1 ", "="*20)
 ack, connected = ur.call('connected')
-print(ack,connected)
+# print(ack, "response - ", "connected" if connected == 1 else "not connected")
 if ack == "connectedack":
     if connected == 1:
         print("Gamepad connected")
@@ -56,7 +57,7 @@ if ack == "connectedack":
         # Returns the Bluetooth address of the controller connected as index idx as a string in the format 'AA:BB:CC:11:22:33'
         ack, bluetooth_address = ur.call('btaddress','B',0)
         print(bluetooth_address.decode('utf-8'), " is connected")
-        # # Configures the bluetooth address bluetooth_address (given as a string in the format 'AA:BB:CC:11:22:33') to be used as a filter for controllers to be connected. Depending on the btfilter setting, the filter will be active.
+        # Configures the bluetooth address bluetooth_address (given as a string in the format 'AA:BB:CC:11:22:33') to be used as a filter for controllers to be connected. Depending on the btfilter setting, the filter will be active.
         # ur.call('btallow','17s',controller_id)
         # # Activaes the bluetooth filter. Values are 0 (not active) or 1 (active).
         # filter_active = 1
@@ -69,16 +70,16 @@ else:
     print("LMS-ESP32 not connected over UART")
     hub.status_light.on('red')
     hub.light_matrix.show_image('SAD')
+    wait_for_seconds(1)
     raise SystemExit
 
+print("2 ", "#"*20)
 while True:
     ack, connected = ur.call('connected')
-    print("waiting for connection")
     if connected:
         hub.light_matrix.show_image('HAPPY')
         hub.status_light.on('blue')
         break
-
     wait_for_seconds(1)
 
 # Returns the status of the gamepad with 6 parameters:
@@ -86,18 +87,14 @@ while True:
 # myGamepad->axisY(),myGamepad->axisRX(),myGamepad->axisRY())
 # print(ur.call('gamepad'))
 
+print("3 ", "%"*20)
 
 while 1:
-    ack, pad = ur.call('gamepad')
+    ack, pad = ur.call('gamepad', timeout=50)
     if ack=="gamepadack":
         btns, dpad, left_x, left_y, right_x, right_y = pad
         ack, bluetooth_address = ur.call('btaddress','B',0)
         # print(bluetooth_address, " is connected")
-
-    else:
-        btns, dpad, left_x, left_y, right_x, right_y = [0]*6
-        hub.light_matrix.show_image('SAD')
-        hub.status_light.on('red')
 
     if hub.left_button.is_pressed():
         hub.light_matrix.write(bluetooth_address.decode('utf-8'))
