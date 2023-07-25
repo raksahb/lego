@@ -1,7 +1,6 @@
-from projects.mpy_robot_tools.helpers import clamp_int
 from projects.mpy_robot_tools.serialtalk import SerialTalk
 from projects.mpy_robot_tools.serialtalk.mshub import MSHubSerial
-from spike import PrimeHub, Motor, MotorPair
+from spike import PrimeHub, MotorPair
 from spike.control import wait_for_seconds
 
 ur = SerialTalk( MSHubSerial('D'), timeout=20)
@@ -44,10 +43,10 @@ dpad_btn_left = 8
 
 hub.light_matrix.show_image('ASLEEP')
 hub.status_light.on('orange')
-wait_for_seconds(1)
 # Check whether a gamepad is connected. Returns 1 when connected
 # print("1 ", "="*20)
 ack, connected = ur.call('connected')
+wait_for_seconds(1)
 # print(ack, "response - ", "connected" if connected == 1 else "not connected")
 if ack == "connectedack":
     if connected == 1:
@@ -103,7 +102,6 @@ while 1:
     speed = left_y/-5.12
     turn = int(right_x/5.12)
     motor_speed = int(speed)
-    power = clamp_int(-speed - turn)
     # print("btns %03d"%btns, "dpad %d"%dpad, "left_x %04d"%left_x, "left_y %04d"%left_y, "right_x %04d"%right_x, "right_y %04d"%right_y, 'speed ', speed, 'turn ', turn) # Debug
     # print("speed {speed:010.5f}, turn {turn:09.5f}, power {power}".format(speed=speed, turn=turn, power=power)) # Debug
 
