@@ -10,11 +10,11 @@
 	- Sometimes the Spike Prime Legacy app thinks it needs to upgrade the Hub
 	- If it does, let it upgrade the Hub
 	- In this case, you will need to reinstall the UartRemote library on the Hub
-- Run "Install UartRemote" program - [install_uart_remote.py](https://github.com/raksahb/lego/blob/main/Spike%20Prime/install_uart_remote.py)
-- Download "Run Robot" program onto hub at on program 0 - [run_robot.py](https://github.com/raksahb/lego/blob/main/Spike%20Prime/run_robot.py)
-- Download "Run Robot Soccer" program onto hub at on program 1 - [robot_soccer.py](https://github.com/raksahb/lego/blob/main/Spike%20Prime/robot_soccer.py)
-- Download "Third Motor Soccer" program onto hub at on program 2 - [third_motor_soccer.py](https://github.com/raksahb/lego/blob/main/Spike%20Prime/third_motor_soccer.py)
-- Download "Run Robot Third Motor" program onto hub at on program 3 - [third_motor_run_robot.py](https://github.com/raksahb/lego/blob/main/Spike%20Prime/third_motor_run_robot.py)
+- Run "Install UartRemote" program - [install_uart_remote.py](./Spike%20Prime/install_uart_remote.py)
+- Download "Run Robot" program onto hub at on program 0 - [run_robot.py](./Spike%20Prime/run_robot.py)
+- Download "Run Robot Soccer" program onto hub at on program 1 - [robot_soccer.py](./Spike%20Prime/robot_soccer.py)
+- Download "Third Motor Soccer" program onto hub at on program 2 - [third_motor_soccer.py](./Spike%20Prime/third_motor_soccer.py)
+- Download "Run Robot Third Motor" program onto hub at on program 3 - [third_motor_run_robot.py](./Spike%20Prime/third_motor_run_robot.py)
 
 ## Assembling the Robot
 - Connect the wheel motors to the Lego Spike Hub
@@ -50,7 +50,7 @@
 ## Advanced Troubleshooting
 - Xbox controller does not connect to LSM ESP32 board
 	- Plugin ESP32 board to a computer using a micro USB cable
-	- In a browser window open firmware.antonsmindstorms.com
+	- In a browser window open https://firmware.antonsmindstorms.com
 	- Connect to the serial port detected by the firmware
 	- Open logs 
 	- Click Reset button to restart the ESP32 board and watch the logs
@@ -64,3 +64,16 @@
 	  - OR try a different Xbox controller with the ESP32 board
 	
 
+## Updating the firmware for LSM ESP32 board
+	- Plugin ESP32 board to a computer using a micro USB cable
+	- In a browser window open https://firmware.antonsmindstorms.com
+		- Choose "BluePad32 UartRemote for Micropython Mindstorms"
+		- As of last update the version is "20250104"
+	- Connect to the serial port detected by the firmware
+	- Click "Install BluePad32 UartRemote for Micropython Mindstorms"
+
+
+## Pairing LSM ESP32 Board with Specific XBox Controller
+- To pair an XBox Controller to a specific LSM ESP32 board
+	- Plugin ESP32 board to a computer using a micro USB cable
+	- In a browser window open https://bluepad.antonsmindstorms.com/
