@@ -65,6 +65,7 @@
 	
 
 ## Updating the firmware for LSM ESP32 board
+- Follow these steps to update the firmware of an LSM ESP32 board:
 	- Plugin ESP32 board to a computer using a micro USB cable
 	- In a browser window open https://firmware.antonsmindstorms.com
 		- Choose "BluePad32 UartRemote for Micropython Mindstorms"
