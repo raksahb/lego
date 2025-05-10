@@ -1,17 +1,14 @@
 from projects.mpy_robot_tools.serialtalk import SerialTalk
 from projects.mpy_robot_tools.serialtalk.mshub import MSHubSerial
-from spike import PrimeHub, MotorPair
 from spike.control import wait_for_seconds
+from spike import PrimeHub
 
-ur = SerialTalk( MSHubSerial('D'), timeout=20)
+ur = SerialTalk( MSHubSerial('F'), timeout=20)
 
 # def clamp_int(n, floor=-100, ceiling=100):
 #    return max(min(round(n), ceiling), floor)
 
 
-# If the left motor is connected to Port B
-# And the right motor is connected to Port A
-motor_pair = MotorPair('B', 'A')
 
 # Initialize the motor
 # left_wheel_motor_A = Motor('A')
@@ -107,8 +104,8 @@ while 1:
 
     if abs(motor_speed) > 15:
         steering = 0 if abs(turn) < 15 else turn
-        motor_pair.start(steering=-steering, speed=-motor_speed)
+        hub.light_matrix.write(motor_speed)
     else:
-        motor_pair.stop()
+        hub.light_matrix.show_image('NO')
 
 
