@@ -96,7 +96,7 @@ def drive_motor(motor, speed):
         motor.stop()
 
 while 1:
-    ack, pad = ur.call('gamepad', timeout=50)
+    ack, pad = ur.call('gamepad')
     if ack=="gamepadack":
         btns, dpad, left_x, left_y, right_x, right_y = pad
         ack, bluetooth_address = ur.call('btaddress','B',0)
