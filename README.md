@@ -30,6 +30,33 @@
 - The Hub should now display a blue light and a smiley face
 - The robot is now ready to be used
 
+
+## Updating the firmware for LSM ESP32 board
+- Follow these steps to update the firmware of an LSM ESP32 board:
+	- Plugin ESP32 board to a computer using a micro USB cable
+	- In a browser window open https://firmware.antonsmindstorms.com
+		- Choose "BluePad32 UartRemote for Micropython Mindstorms"
+		- As of last update the version is "20250104". It could be newer when you run it
+	- Connect to the serial port detected by the firmware
+	- Click "Install BluePad32 UartRemote for Micropython Mindstorms"
+	- Confirm the choice
+	- The install takes a few minutes and shows a progress indicator until completed
+	- Once the install is complete you can close the window
+
+## Pairing LSM ESP32 Board with Specific XBox Controller
+- To pair an XBox Controller to a specific LSM ESP32 board
+	- Plugin ESP32 board to a computer using a micro USB cable
+	- In a browser window open https://bluepad.antonsmindstorms.com
+	- If the XBox controller is not paired, turn on the XBox controller and set it to pairing mode and let it connect to the ESP32 board
+	- Once it's connected, the easiest way to get its address is to run one of the programs on the Spike Prime Hub from the https://spikelegacy.legoeducation.com/ editor. e.g, program 0 - [run_robot.py](./Spike%20Prime/run_robot.py)
+		- When the program starts it will print the address of controller in the console section of the Spike Prime Legacy editor. e.g, "9A:AB:1A:7F:4E:BA is connected"
+	- Copy this address and paste it into the "Allowed BT MAC address" field
+	- Also be sure to check the "BT Filtered" checkbox
+	- Then click the "Send & save to flash" button
+	- The ESP32 board will now always connect to this XBox controller
+	- If you need to change this either assign a new address using these steps OR click the "Reset to default" button
+
+
 ## Operating the Robot
 - Driving the robot
 	- Program 0 - Left joystick up/down for forward/reverse. Right joystick to turn left/right
@@ -62,19 +89,4 @@
 	- If it does not connect after a few tries, 
 	  - turn both ESP32 and controller for a few seconds and try those steps again
 	  - OR try a different Xbox controller with the ESP32 board
-	
 
-## Updating the firmware for LSM ESP32 board
-- Follow these steps to update the firmware of an LSM ESP32 board:
-	- Plugin ESP32 board to a computer using a micro USB cable
-	- In a browser window open https://firmware.antonsmindstorms.com
-		- Choose "BluePad32 UartRemote for Micropython Mindstorms"
-		- As of last update the version is "20250104"
-	- Connect to the serial port detected by the firmware
-	- Click "Install BluePad32 UartRemote for Micropython Mindstorms"
-
-
-## Pairing LSM ESP32 Board with Specific XBox Controller
-- To pair an XBox Controller to a specific LSM ESP32 board
-	- Plugin ESP32 board to a computer using a micro USB cable
-	- In a browser window open https://bluepad.antonsmindstorms.com/
