@@ -1,3 +1,6 @@
+Flash the LMS-ESP32 with "MicroPython v1.24.1 uartremote+pupremote" firmware using
+https://firmware.antonsmindstorms.com/
+
 These files go on the LMS-ESP32 board.
 * [main.py](./main.py)
 * [pupremote.py](./pupremote.py)
