@@ -6,9 +6,9 @@ from pybricks.pupdevices import Motor
 pr = PUPRemoteHub(Port.F)
 pr.add_channel('line','hhb') # Pass two 'h'alf ints: x coordinate of line head, and of line tail.
 
-lm = Motor(Port.A, Direction.COUNTERCLOCKWISE)
-rm = Motor(Port.B)
-db = DriveBase(lm, rm, 56, 16*8)
+lm = Motor(Port.B, Direction.COUNTERCLOCKWISE)
+rm = Motor(Port.A)
+db = DriveBase(lm, rm, 56, 60+28) # 56 mm wheel diameter, 60 mm wheel base + 28 mm offset for the line sensor.
 
 while 1:
     x_head, x_tail, line_seen = pr.call('line')
