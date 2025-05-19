@@ -9,9 +9,12 @@ import time
 # The HuskyLens must be connected to the ESP32 via I2C, 
 # and the ESP32 must be connected and powered by the SPIKE hub.
 
+HUSKY_LENS_X_RESOLUTION = 320
+HUSKY_LENS_X_MID_POINT = HUSKY_LENS_X_RESOLUTION / 2
+
 # Set up comms with SPIKE hub
 pr = PUPRemoteSensor(power=True)
-pr.add_channel('line','hhb') # Pass two 'h'alf ints: x coordinate of line head, and of line tail.
+pr.add_channel('line','hhhhb') # Pass two 'h'alf ints: x coordinate of line head, and of line tail.
 pr.process() # Connect to hub
 
 # Set up Huskylens
@@ -25,15 +28,18 @@ huskylens.show_text("Hello LMS-ESP32 !")
 
 while True:
     lines = huskylens.get_arrows()
+    print(lines)
     if lines:
         # Calculate how far the head and tail are out of center.
-        x_head = lines[0].x_head - 160
-        x_tail = lines[0].x_tail - 160
-        print(x_head, x_tail)
+        x_head = lines[0].x_head
+        y_head = lines[0].y_head
+        x_tail = lines[0].x_tail
+        y_tail = lines[0].y_tail
+        # print(x_head, y_head, x_tail, y_tail)
         line_seen = 1
     else:
         x_head = 0
         x_tail = 0
         line_seen = 0
-    pr.update_channel('line', x_head, x_tail, line_seen)
+    pr.update_channel('line', x_head, y_head, x_tail, y_tail, line_seen)
     pr.process()
