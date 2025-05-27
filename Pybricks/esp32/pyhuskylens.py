@@ -360,6 +360,37 @@ class HuskyLens:
             print("Version is:", p)
             return p
 
+    def take_screenshot(self):
+        """Request the HuskyLens to take a screenshot."""
+        self.write_cmd(REQUEST_SEND_SCREENSHOT)
+        # The response would typically be the image data
+        # You would need to process this appropriately
+        # Return value depends on how HuskyLens sends image data
+        cmd, data = self.read_cmd()
+        return cmd, data
+
+    def save_screenshot(self, filename=None):
+        """Save a screenshot directly on the HuskyLens.
+        
+        Note: This function requires that the HuskyLens has an SD card inserted.
+        The screenshot will be saved to the SD card in the HuskyLens.
+        
+        Args:
+            filename (str, optional): Custom filename. If None, HuskyLens will use default naming.
+                                     Note: Not all firmware versions support custom naming.
+        
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if filename:
+            # Some firmware versions might support sending a custom filename
+            # This would need to be tested with your specific firmware
+            payload = bytes(filename, "UTF-8")
+            self.write_cmd(REQUEST_SAVE_SCREENSHOT, payload)
+        else:
+            self.write_cmd(REQUEST_SAVE_SCREENSHOT)
+        return self.check_ok(timeout=40)  # Screenshot saving might take longer
+
 
 def clamp_int(r, low_cap=-100, high_cap=100):
     return int(min(max(r, low_cap), high_cap))
