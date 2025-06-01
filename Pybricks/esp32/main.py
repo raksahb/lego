@@ -8,6 +8,7 @@ import time
 # It uses the HuskyLens to detect lines and sends the line coordinates to the hub.
 # The HuskyLens must be connected to the ESP32 via I2C, 
 # and the ESP32 must be connected and powered by the SPIKE hub.
+print("HuskyLens Line Tracking Example Started")
 
 HUSKY_LENS_X_RESOLUTION = 320
 HUSKY_LENS_X_MID_POINT = HUSKY_LENS_X_RESOLUTION / 2
@@ -39,7 +40,9 @@ while True:
         line_seen = 1
     else:
         x_head = 0
+        y_head = 0  # Added y_head initialization
         x_tail = 0
+        y_tail = 0  # Added y_tail initialization
         line_seen = 0
     pr.update_channel('line', x_head, y_head, x_tail, y_tail, line_seen)
     pr.process()
