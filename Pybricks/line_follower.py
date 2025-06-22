@@ -4,7 +4,7 @@ from pybricks.robotics import DriveBase
 from pybricks.pupdevices import Motor
 
 pr = PUPRemoteHub(Port.F)
-pr.add_channel('line','hhhhb') # Pass two 'h'alf ints: x coordinate of line head, and of line tail.
+pr.add_channel('line', 'hhhhb') # Pass two 'h'alf ints: x coordinate of line head, and of line tail.
 
 lm = Motor(Port.B, Direction.COUNTERCLOCKWISE)
 rm = Motor(Port.A)
