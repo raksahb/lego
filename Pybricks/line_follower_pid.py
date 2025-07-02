@@ -109,14 +109,16 @@ while True:
           (line_seen, x_head, y_head, x_tail, y_tail))
     
     if line_seen:
-        # Use tail point as target (equivalent to xTarget in Arduino)
-        target_x = x_tail
+        # Use HEAD point as target - this shows where the line is going!
+        # The tail is always near the robot, but head shows curves ahead
+        target_x = x_head  # Changed from x_tail to x_head
         
         # Calculate error from center (160 is camera center)
         error = target_x - 160
         
         # Deadband: ignore very small errors to prevent tiny oscillations
-        if abs(error) < 3:  # If error is less than 3 pixels, treat as zero
+        # Reduced from 3 to 1 to better detect curves
+        if abs(error) < 1:  # If error is less than 1 pixel, treat as zero
             error = 0
         
         # Update PID controller
@@ -146,7 +148,7 @@ while True:
         elif turn_rate < -MAX_TURN_RATE:
             turn_rate = -MAX_TURN_RATE
         
-        print("Error:", error, "PID:", pid_output)
+        print("Error:", error, "PID:", pid_output, "Target:", target_x)
         print("Speed:", speed, "Turn:", turn_rate)
             
     else:
