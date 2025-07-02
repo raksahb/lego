@@ -89,17 +89,19 @@ robot = DriveBase(left_motor, right_motor, wheel_diameter=56, axle_track=80)
 #
 # TUNED FOR CURVED TRACK: Lower kp for gentler turns, higher kd for stability
 # REDUCED ki to prevent integral windup that caused the left-turning problem
-pid_controller = SimplePID(kp=0.4, ki=0.01, kd=0.4)
+# INCREASED kp to respond better to large errors and sharp curves
+pid_controller = SimplePID(kp=0.6, ki=0.01, kd=0.4)
 
 # Control parameters
 BASE_SPEED = 50  # Reduced base speed for better curve handling
 CURVE_SPEED = 30  # Slower speed for tight curves
-MAX_TURN_RATE = 15  # Reduced max turn rate to prevent overshooting
+MAX_TURN_RATE = 30  # INCREASED: Allow sharper turns for recovery
 
 print("Starting PID line follower...")
 print("Using PID control for smooth line following")
 print("PID gains: P=", pid_controller.kp, "I=", pid_controller.ki,
       "D=", pid_controller.kd)
+print("Max turn rate:", MAX_TURN_RATE, "Emergency recovery enabled")
 
 while True:
     # Get line data from camera
@@ -127,7 +129,9 @@ while True:
         # Adaptive speed control for curves
         # Large errors usually mean we're in a curve - slow down!
         abs_error = abs(error)
-        if abs_error > 40:  # Sharp curve detected
+        if abs_error > 60:  # Emergency recovery mode for severe off-track
+            current_speed = 15  # Very slow to allow sharp correction
+        elif abs_error > 40:  # Sharp curve detected
             current_speed = CURVE_SPEED
         elif abs_error > 20:  # Gentle curve
             current_speed = (BASE_SPEED + CURVE_SPEED) / 2  # Medium speed
@@ -141,6 +145,10 @@ while True:
         # Convert to Pybricks format
         speed = (left_speed + right_speed) / 2
         turn_rate = (right_speed - left_speed) * 0.4
+        
+        # Emergency recovery: boost turn rate for severe errors
+        if abs_error > 60:
+            turn_rate = turn_rate * 1.5  # Boost turning for recovery
         
         # Limit turn rate for stability
         if turn_rate > MAX_TURN_RATE:
