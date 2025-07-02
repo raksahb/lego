@@ -69,6 +69,12 @@ robot = DriveBase(left_motor, right_motor, wheel_diameter=56, axle_track=80)
 # - Higher kp = robot turns harder when it sees the line is off-center
 # - Higher ki = robot fixes small steady mistakes (like always drifting left)
 # - Higher kd = robot turns more smoothly, less back-and-forth wiggling
+#
+# Good starting ranges and what happens if you change them:
+# kp: 0.1-2.0 (0.1=gentle turns, 1.0=medium, 2.0=aggressive turns)
+# ki: 0.0-0.5 (start with 0.0, only add if robot drifts consistently)
+# kd: 0.0-1.0 (0.0=might wiggle, 0.5=smoother, 1.0=very smooth but slower)
+# WARNING: kp=100 would make the robot turn WAY too hard and go crazy!
 pid_controller = SimplePID(kp=0.8, ki=0.1, kd=0.2)
 
 # Control parameters
