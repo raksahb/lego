@@ -36,6 +36,17 @@ class SimplePID:
         # Proportional term
         proportional = error * self.kp
 
+        # Reset integral when crossing zero (error changes sign)
+        if self.prev_error is not None:
+            prev_pos = self.prev_error > 0
+            prev_neg = self.prev_error < 0
+            curr_zero_or_neg = error <= 0
+            curr_zero_or_pos = error >= 0
+            crossing_zero = ((prev_pos and curr_zero_or_neg) or
+                             (prev_neg and curr_zero_or_pos))
+            if crossing_zero:
+                self.integral = 0  # Clear accumulated error
+
         # Integral term (accumulated error)
         self.integral += error
         # Limit integral to prevent windup
@@ -75,11 +86,15 @@ robot = DriveBase(left_motor, right_motor, wheel_diameter=56, axle_track=80)
 # ki: 0.0-0.5 (start with 0.0, only add if robot drifts consistently)
 # kd: 0.0-1.0 (0.0=might wiggle, 0.5=smoother, 1.0=very smooth but slower)
 # WARNING: kp=100 would make the robot turn WAY too hard and go crazy!
-pid_controller = SimplePID(kp=0.8, ki=0.1, kd=0.2)
+#
+# TUNED FOR CURVED TRACK: Lower kp for gentler turns, higher kd for stability
+# REDUCED ki to prevent integral windup that caused the left-turning problem
+pid_controller = SimplePID(kp=0.4, ki=0.01, kd=0.4)
 
 # Control parameters
-BASE_SPEED = 60  # Base forward speed
-MAX_TURN_RATE = 60  # Maximum turn rate to prevent instability
+BASE_SPEED = 50  # Reduced base speed for better curve handling
+CURVE_SPEED = 30  # Slower speed for tight curves
+MAX_TURN_RATE = 15  # Reduced max turn rate to prevent overshooting
 
 print("Starting PID line follower...")
 print("Using PID control for smooth line following")
@@ -89,6 +104,9 @@ print("PID gains: P=", pid_controller.kp, "I=", pid_controller.ki,
 while True:
     # Get line data from camera
     x_head, y_head, x_tail, y_tail, line_seen = pr.call('line')
+    # Show what the camera sees (for debugging)
+    print("Line seen: %d, Head: (%d, %d), Tail: (%d, %d)" %
+          (line_seen, x_head, y_head, x_tail, y_tail))
     
     if line_seen:
         # Use tail point as target (equivalent to xTarget in Arduino)
@@ -97,12 +115,26 @@ while True:
         # Calculate error from center (160 is camera center)
         error = target_x - 160
         
+        # Deadband: ignore very small errors to prevent tiny oscillations
+        if abs(error) < 3:  # If error is less than 3 pixels, treat as zero
+            error = 0
+        
         # Update PID controller
         pid_output = pid_controller.update(error)
         
+        # Adaptive speed control for curves
+        # Large errors usually mean we're in a curve - slow down!
+        abs_error = abs(error)
+        if abs_error > 40:  # Sharp curve detected
+            current_speed = CURVE_SPEED
+        elif abs_error > 20:  # Gentle curve
+            current_speed = (BASE_SPEED + CURVE_SPEED) / 2  # Medium speed
+        else:  # Straight section
+            current_speed = BASE_SPEED
+        
         # Calculate motor speeds (similar to Arduino approach)
-        left_speed = BASE_SPEED - pid_output
-        right_speed = BASE_SPEED + pid_output
+        left_speed = current_speed - pid_output
+        right_speed = current_speed + pid_output
         
         # Convert to Pybricks format
         speed = (left_speed + right_speed) / 2
