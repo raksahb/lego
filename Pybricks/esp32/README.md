@@ -81,10 +81,10 @@ The ESP32 will automatically run `boot.py` followed by `main.py` on power-up. Th
 ## Hardware Connections
 
 1. Connect HuskyLens to ESP32 via I2C:
-   * HuskyLens SDA → ESP32 pin 21
-   * HuskyLens SCL → ESP32 pin 22
-   * HuskyLens VCC → ESP32 3.3V
-   * HuskyLens GND → ESP32 GND
+   * HuskyLens SDA (blue wire) → ESP32 pin 21
+   * HuskyLens SCL (green wire) → ESP32 pin 22
+   * HuskyLens VCC (red wire) → ESP32 3.3V
+   * HuskyLens GND (black wire) → ESP32 GND
 
 2. Connect ESP32 to SPIKE hub port (this powers the ESP32)
 
