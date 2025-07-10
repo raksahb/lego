@@ -15,7 +15,8 @@ HUSKY_LENS_X_MID_POINT = HUSKY_LENS_X_RESOLUTION / 2
 
 # Set up comms with SPIKE hub
 pr = PUPRemoteSensor(power=True)
-pr.add_channel('line','hhhhb') # Pass two 'h'alf ints: x coordinate of line head, and of line tail.
+# Pass x_head, y_head, x_tail, y_tail (h), direction (f), line_seen (b)
+pr.add_channel('line', 'hhhhfb')
 pr.process() # Connect to hub
 
 # Set up Huskylens
@@ -23,19 +24,21 @@ pr.process() # Connect to hub
 time.sleep(4) # Wait for the Huskylens to boot
 i2c = SoftI2C(scl=Pin(22), sda=Pin(21))
 huskylens = HuskyLens(i2c)
-print("Huskylens connected is", huskylens.knock())
+isConnected = huskylens.knock()
+print("Huskylens connected is", isConnected)
 huskylens.set_alg(ALGORITHM_LINE_TRACKING)
 huskylens.show_text("Hello LMS-ESP32 !")
 
-while True:
+while True and isConnected:
     lines = huskylens.get_arrows()
-    print(lines)
+    # print(lines)
     if lines:
         # Calculate how far the head and tail are out of center.
         x_head = lines[0].x_head
         y_head = lines[0].y_head
         x_tail = lines[0].x_tail
         y_tail = lines[0].y_tail
+        direction = lines[0].direction  # Direction in degrees
         # print(x_head, y_head, x_tail, y_tail)
         line_seen = 1
     else:
@@ -43,6 +46,7 @@ while True:
         y_head = 0  # Added y_head initialization
         x_tail = 0
         y_tail = 0  # Added y_tail initialization
+        direction = 0
         line_seen = 0
-    pr.update_channel('line', x_head, y_head, x_tail, y_tail, line_seen)
+    pr.update_channel('line', x_head, y_head, x_tail, y_tail, direction, line_seen)
     pr.process()
