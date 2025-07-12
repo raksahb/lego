@@ -19,10 +19,10 @@ from pupremote_hub import PUPRemoteHub
 from pybricks.parameters import Port, Direction
 from pybricks.robotics import DriveBase
 from pybricks.pupdevices import Motor
-
+boost = 1.5
 # Setup the robot
 pr = PUPRemoteHub(Port.F)
-pr.add_channel('line', 'hhhhb')  # Get line coordinates from camera
+pr.add_channel('line', 'hhhhfb')  # Get line coordinates from camera
 
 left_motor = Motor(Port.B, Direction.COUNTERCLOCKWISE)
 right_motor = Motor(Port.A)
@@ -33,39 +33,26 @@ print("The robot will follow a black line on the floor")
 
 while True:
     # Get line data from camera
-    x_head, y_head, x_tail, y_tail, line_seen = pr.call('line')
+    x_head, y_head, x_tail, y_tail, direction, line_seen = pr.call('line')
     
     # Show what the camera sees (for debugging)
-    print(f"Line seen: {line_seen}, Head: ({x_head}, {y_head}), Tail: ({x_tail}, {y_tail})")
+    # print(f"Line seen: {line_seen}, Head: ({x_head}, {y_head}), Tail: ({x_tail}, {y_tail}), Direction: {direction}")
 
     if line_seen:
-        # STEP 1: Find the center of the line
-        # The camera gives us two points (head and tail), so we average them
-        line_center = (x_head + x_tail) / 2
-        
-        # STEP 2: Calculate how far off-center the line is
-        # Camera screen is 320 pixels wide, so center is at x = 160
-        error = line_center - 160
-        # Positive error = line is to the right
-        # Negative error = line is to the left
-        
-        # STEP 3: Convert error to steering
-        # Bigger error = sharper turn needed
-        turn_rate = error * 0.3  # TRY CHANGING THIS NUMBER!
-        
-        # STEP 4: Set speed based on how much we need to turn
+        turn_rate = -direction * 0.3 * boost
+        # Set speed based on how much we need to turn
         if abs(turn_rate) < 10:
-            speed = 60  # Go fast on straight sections
+            speed = 60 * boost    # Go fast on straight sections
         else:
-            speed = 40  # Go slower on curves
-            
-        print(f"Error: {error:.1f}, Turn: {turn_rate:.1f}, Speed: {speed}")
-            
+            speed = 60 * boost    # Go slower on curves   
     else:
         # No line detected - turn slowly to search for it
-        speed = 20
-        turn_rate = 20
-        print("Searching for line...")
+        speed = 60 * boost
+        turn_rate = 0
+        # print("Searching for line...")
+    print(f"Line seen: {line_seen}, Head: ({x_head}, {y_head}), Tail: ({x_tail}, {y_tail}), Direction: {direction}, Turn Rate: {turn_rate}, Speed: {speed}")
 
+    # speed = 50 # mm/s
+    # turn_rate = 0 # deg/s
     # STEP 5: Move the robot
     robot.drive(speed, turn_rate)
