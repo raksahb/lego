@@ -1,17 +1,23 @@
 """
-Advanced Line Following Robot with PID Control
-==============================================
+Advanced Line Following Robot with PID Control + Direction Following
+====================================================================
 
-This program implements PID control for line following, similar to the
-Arduino HUSKYLENS_LINE_TRACKING example.
+This program combines two approaches for robust line following:
+1. Direction-based steering: Uses the line's angle to determine turn direction
+2. PID position control: Fine-tunes steering based on line position
+
+Key improvements over simple direction-only control:
+- PID helps maintain precise positioning on the line
+- Direction provides natural curve anticipation
+- Adaptive speed control for different curve types
 
 PID Control Concepts:
-- P (Proportional): Responds to current error
-- I (Integral): Responds to accumulated error over time
-- D (Derivative): Responds to rate of error change
+- P (Proportional): Responds to current position error
+- I (Integral): Responds to accumulated position error over time
+- D (Derivative): Responds to rate of position error change
 
-This provides smoother, more stable line following than simple proportional
-control.
+This provides the best of both worlds: intuitive direction following
+with precise position control.
 """
 
 from pupremote_hub import PUPRemoteHub
@@ -21,7 +27,14 @@ from pybricks.pupdevices import Motor
 
 
 class SimplePID:
-    """Simple PID controller similar to the Arduino version"""
+    """
+    PID controller for position fine-tuning in hybrid control system.
+    
+    This PID operates on position error (line offset from screen center)
+    and provides small corrections to the main direction-based steering.
+    The output is scaled down (0.1x) so it acts as fine-tuning rather
+    than primary control.
+    """
 
     def __init__(self, kp=2.0, ki=0.0, kd=0.0):
         self.kp = kp  # Proportional gain
@@ -69,103 +82,102 @@ class SimplePID:
 
 # Setup the robot
 pr = PUPRemoteHub(Port.F)
-pr.add_channel('line', 'hhhhb')  # Get line coordinates from camera
+pr.add_channel('line', 'hhhhfb')  # Get line coords and direction from camera
 
 left_motor = Motor(Port.B, Direction.COUNTERCLOCKWISE)
 right_motor = Motor(Port.A)
 robot = DriveBase(left_motor, right_motor, wheel_diameter=56, axle_track=80)
 
-# PID controller (similar to Arduino headingLoop)
-# You can adjust these gains to tune how the robot behaves:
-# - Higher kp = robot turns harder when it sees the line is off-center
-# - Higher ki = robot fixes small steady mistakes (like always drifting left)
-# - Higher kd = robot turns more smoothly, less back-and-forth wiggling
+# PID controller for position fine-tuning (works with direction control)
+# This PID operates on position error (how far line is from screen center)
+# It provides small corrections to the main direction-based steering
 #
-# Good starting ranges and what happens if you change them:
-# kp: 0.1-2.0 (0.1=gentle turns, 1.0=medium, 2.0=aggressive turns)
-# ki: 0.0-0.5 (start with 0.0, only add if robot drifts consistently)
-# kd: 0.0-1.0 (0.0=might wiggle, 0.5=smoother, 1.0=very smooth but slower)
-# WARNING: kp=100 would make the robot turn WAY too hard and go crazy!
+# You can adjust these gains to tune position accuracy:
+# - Higher kp = stronger position corrections when line is off-center
+# - Higher ki = fixes small steady position drift over time
+# - Higher kd = smoother position corrections, less oscillation
 #
-# TUNED FOR CURVED TRACK: Lower kp for gentler turns, higher kd for stability
-# REDUCED ki to prevent integral windup that caused the left-turning problem
-# INCREASED kp to respond better to large errors and sharp curves
+# Good starting ranges for position control:
+# kp: 0.1-1.0 (0.1=gentle corrections, 1.0=strong position holding)
+# ki: 0.0-0.1 (start with 0.0, only add if robot drifts consistently)
+# kd: 0.1-0.5 (0.1=basic smoothing, 0.5=very smooth but slower response)
+#
+# Note: These values are scaled by 0.1 in the final calculation, 
+# so they work as fine-tuning on top of direction-based steering
 pid_controller = SimplePID(kp=0.6, ki=0.01, kd=0.4)
 
-# Control parameters
-BASE_SPEED = 50  # Reduced base speed for better curve handling
-CURVE_SPEED = 30  # Slower speed for tight curves
-MAX_TURN_RATE = 30  # INCREASED: Allow sharper turns for recovery
+# Control parameters for hybrid direction + position control
+BASE_SPEED = 50  # Base speed for straight line segments
+CURVE_SPEED = 30  # Reduced speed for curves (based on turn rate)
+MAX_TURN_RATE = 20  # Maximum turn rate for stability and safety
 
-print("Starting PID line follower...")
-print("Using PID control for smooth line following")
+print("Starting PID line follower with direction control...")
+print("Using direction + PID for robust line following")
 print("PID gains: P=", pid_controller.kp, "I=", pid_controller.ki,
       "D=", pid_controller.kd)
-print("Max turn rate:", MAX_TURN_RATE, "Emergency recovery enabled")
+print("Direction scaling: 0.3, PID scaling: 0.1")
+
+turn_rate = 0
 
 while True:
-    # Get line data from camera
-    x_head, y_head, x_tail, y_tail, line_seen = pr.call('line')
-    # Show what the camera sees (for debugging)
-    print("Line seen: %d, Head: (%d, %d), Tail: (%d, %d)" %
-          (line_seen, x_head, y_head, x_tail, y_tail))
+    # Get line data from camera including direction angle
+    x_head, y_head, x_tail, y_tail, direction, line_seen = pr.call('line')
+    # Show what the camera sees (for debugging and tuning)
+    # print("Line seen: %d, Head: (%d, %d), Tail: (%d, %d), Direction: %.1f" %
+    #       (line_seen, x_head, y_head, x_tail, y_tail, direction))
     
     if line_seen:
-        # Use HEAD point as target - this shows where the line is going!
-        # The tail is always near the robot, but head shows curves ahead
-        target_x = x_head  # Changed from x_tail to x_head
+        # HYBRID CONTROL: Direction + Position
+        # Primary: Use line direction for main steering (natural curves)
+        # Secondary: Use PID on position for precision and drift correction
         
-        # Calculate error from center (160 is camera center)
-        error = target_x - 160
+        # Calculate main steering from line direction
+        # Direction: 0° = straight ahead, positive = left turn needed
+        base_turn_rate = -direction * 0.3
         
-        # Deadband: ignore very small errors to prevent tiny oscillations
-        # Reduced from 3 to 1 to better detect curves
-        if abs(error) < 1:  # If error is less than 1 pixel, treat as zero
-            error = 0
+        # Calculate position error for PID fine-tuning
+        target_x = x_head  # Use head position (shows where line is going)
+        position_error = target_x - 160  # Error from center (160 = center)
         
-        # Update PID controller
-        pid_output = pid_controller.update(error)
+        # Deadband: ignore tiny errors to prevent micro-oscillations
+        if abs(position_error) < 1:
+            position_error = 0
         
-        # Adaptive speed control for curves
-        # Large errors usually mean we're in a curve - slow down!
-        abs_error = abs(error)
-        if abs_error > 60:  # Emergency recovery mode for severe off-track
-            current_speed = 15  # Very slow to allow sharp correction
-        elif abs_error > 40:  # Sharp curve detected
-            current_speed = CURVE_SPEED
-        elif abs_error > 20:  # Gentle curve
-            current_speed = (BASE_SPEED + CURVE_SPEED) / 2  # Medium speed
-        else:  # Straight section
-            current_speed = BASE_SPEED
+        # Get PID correction for position accuracy
+        pid_output = pid_controller.update(position_error)
         
-        # Calculate motor speeds (similar to Arduino approach)
-        left_speed = current_speed - pid_output
-        right_speed = current_speed + pid_output
+        # Combine direction steering + PID position correction
+        # Direction provides main steering, PID adds small position fixes
+        turn_rate = base_turn_rate + (pid_output * 0.1)  # Scale PID
         
-        # Convert to Pybricks format
-        speed = (left_speed + right_speed) / 2
-        turn_rate = (right_speed - left_speed) * 0.4
+        # Adaptive speed: slow down for sharp turns, speed up for straights
+        abs_turn = abs(turn_rate)
+        if abs_turn > 20:  # Sharp turn needed
+            speed = CURVE_SPEED  # Slow down for sharp turns
+        elif abs_turn > 10:  # Medium turn
+            speed = (BASE_SPEED + CURVE_SPEED) / 2  # Medium speed
+        else:  # Nearly straight
+            speed = BASE_SPEED  # Full speed ahead
         
-        # Emergency recovery: boost turn rate for severe errors
-        if abs_error > 60:
-            turn_rate = turn_rate * 1.5  # Boost turning for recovery
-        
-        # Limit turn rate for stability
+        # Safety: limit turn rate to prevent loss of control
         if turn_rate > MAX_TURN_RATE:
             turn_rate = MAX_TURN_RATE
         elif turn_rate < -MAX_TURN_RATE:
             turn_rate = -MAX_TURN_RATE
         
-        print("Error:", error, "PID:", pid_output, "Target:", target_x)
-        print("Speed:", speed, "Turn:", turn_rate)
+        # print("Direction: %.1f, Position Error: %d, PID: %.1f, Turn: %.1f, Speed: %.1f" %
+        #       (direction, position_error, pid_output, turn_rate, speed))
             
     else:
-        # No line detected - reset PID and search
+        # No line detected - reset PID state and search for line
         pid_controller.integral = 0  # Reset integral term
         pid_controller.prev_error = None  # Reset derivative term
         speed = 20
         turn_rate = 20
         print("Searching for line... (PID reset)")
 
-    # Move the robot
+    print("Line seen: %d, Head: (%d, %d), Tail: (%d, %d), Direction: %.1f, PID: %.1f, Turn: %.1f, Speed: %.1f" %
+          (line_seen, x_head, y_head, x_tail, y_tail, direction, pid_output, turn_rate, speed))
+
+    # Execute hybrid control: direction steering + PID position tuning
     robot.drive(speed, turn_rate)
