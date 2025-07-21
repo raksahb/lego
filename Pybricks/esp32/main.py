@@ -28,10 +28,10 @@ isConnected = huskylens.knock()
 print("Huskylens connected is", isConnected)
 huskylens.set_alg(ALGORITHM_LINE_TRACKING)
 huskylens.show_text("Hello LMS-ESP32 !")
-
-while True and isConnected:
+print("done initializing")
+while True:
     lines = huskylens.get_arrows()
-    # print(lines)
+    print(lines)
     if lines:
         # Calculate how far the head and tail are out of center.
         x_head = lines[0].x_head
@@ -39,7 +39,7 @@ while True and isConnected:
         x_tail = lines[0].x_tail
         y_tail = lines[0].y_tail
         direction = lines[0].direction  # Direction in degrees
-        # print(x_head, y_head, x_tail, y_tail)
+        print(x_head, y_head, x_tail, y_tail)
         line_seen = 1
     else:
         x_head = 0
