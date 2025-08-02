@@ -38,8 +38,8 @@ robot = DriveBase(left_motor, right_motor, wheel_diameter=56, axle_track=80)
 
 # Control parameters
 DEADZONE_THRESHOLD = 15  # Ignore inputs below this value (prevents stick drift)
-SPEED_SCALE = 2.0        # Convert stick input (-512 to 511) to mm/s
-TURN_SCALE = 1.0         # Convert stick input to deg/s
+SPEED_SCALE = 5.0        # Convert stick input (-100 to 100) to mm/s (max 500 mm/s)
+TURN_SCALE = 1.8         # Convert stick input (-100 to 100) to deg/s (max 180 deg/s)
 
 
 def initialize_controller():
@@ -101,17 +101,18 @@ def main():
             left_y = controller.joystick_left()[1]  # Left stick vertical
             right_x = controller.joystick_right()[0]  # Right stick horizontal
             right_y = controller.joystick_right()[1]  # Right stick vertical
-            
+
             # Apply deadzone filtering
             left_y_filtered = apply_deadzone(left_y)
             right_x_filtered = apply_deadzone(right_x)
             
-            # Scale inputs (matching original program scaling)
-            # Original: speed = left_y/-5.12, turn = right_x/5.12
+            # Scale inputs
+            # speed = left_y_filtered goes from -100 to 100 and speed can be up to 500 mm/s
+            # turn = right_x_filtered goes from -100 to 100 and turn_rate can be up to 180 deg/s
             # Negative for correct direction
             speed = scale_input(-left_y_filtered, SPEED_SCALE)
             turn_rate = scale_input(right_x_filtered, TURN_SCALE)
-            
+            print(f"Left stick: ({left_x}, {left_y}), Right stick: ({right_x}, {right_y}), Speed: {speed}, Turn rate: {turn_rate}")
             # Display controller info when left hub button is pressed
             if hub.buttons.pressed():
                 pressed_buttons = hub.buttons.pressed()
