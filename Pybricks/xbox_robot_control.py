@@ -21,7 +21,7 @@ robot = DriveBase(left_motor, right_motor, wheel_diameter=56, axle_track=80)
 DEADZONE_THRESHOLD = 15
 SPEED_SCALE = 10.0
 TURN_SCALE = 1.8
-CLAIM_TIMEOUT_MS = 8000
+CLAIM_TIMEOUT_MS = 5000
 RECONNECT_DELAY_MS = 1200
 # If True: claim is mandatory every start/reconnect.
 # If False: claim prompt is shown, then auto-approves after timeout.
@@ -68,13 +68,13 @@ def wait_for_controller_claim(controller, timeout_ms=CLAIM_TIMEOUT_MS):
         pressed = controller.buttons.pressed()
 
         if Button.A in pressed and Button.RB in pressed:
-            print("Controller verified by student.")
+            print(f"Controller verified on {controller}.")
             show_status(icon=Icon.HAPPY, text="OK", light=Color.BLUE)
             controller.rumble(power=40, duration=150)
             return True
 
         if Button.LEFT in hub.buttons.pressed():
-            print("Controller approved by teacher.")
+            print("Controller approved on hub.")
             show_status(icon=Icon.HAPPY, text="OK", light=Color.BLUE)
             controller.rumble(power=20, duration=100)
             return True
